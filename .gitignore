@@ -1,1 +1,4 @@
 .env
+.gitignore
+/__pycache__
+WSL_2023-2024.parquet
