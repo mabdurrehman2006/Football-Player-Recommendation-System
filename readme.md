@@ -88,7 +88,7 @@ CURRENT PROFILE:
     Shots:   45
     Assists: 5
 ------------------------------------------
-MOST SIMILAR ALTERNATIVES:
+--- Recommendation for Lauren James ---
 
 1. Player X (94.2% Match)
     Goals:   11
