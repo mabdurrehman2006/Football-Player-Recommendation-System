@@ -73,7 +73,6 @@ scouting_matrix = filter_data(raw_data)
 
 # Generate an algorithmic scouting report
 recommend_striker_profile(scouting_matrix, "Lauren James")
-
 ```
 
 **Expected Console Output Layout:**
