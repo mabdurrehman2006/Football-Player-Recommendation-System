@@ -87,7 +87,6 @@ Football-Player-Recommendation-System/
 ├── .dockerignore                      # Build exclusions (caches, git metadata, env)
 ├── requirements.txt                   # Pinned Python dependencies
 ├── .gitignore                         # Git tracking exclusions
-├── ARCHITECTURE_AND_INTERVIEW_GUIDE.md # Comprehensive system design & interview guide
 └── readme.md                          # Project documentation
 ```
 
