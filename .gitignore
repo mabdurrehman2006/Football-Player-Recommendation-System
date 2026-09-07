@@ -1,0 +1,15 @@
+.env
+/__pycache__/
+WSL_2023-2024.parquet
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ruff_cache/
+.pytest_cache/
+.env
+.env.*
+/older build/
+.DS_Store
+data/WSL_2023-2024.parquet

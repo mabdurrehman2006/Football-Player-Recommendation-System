@@ -1,113 +1,185 @@
 
 
 
-# WSL Striker Recommender Engine
+# WSL Striker Intelligence Platform
 
-An intelligent, data-driven football scouting and recruitment tool that identifies similar attacking profiles in the Barclays Women's Super League (WSL). By leveraging raw event-level data from the **StatsBomb API**, the system isolates forward positions, aggregates season-long performance metrics, and uses **Cosine Similarity** to match player profiles based on their tactical style rather than sheer team-volume output. WSL was chosen as the free version of the **StatsBomb** API has the complete 2023/2024 season for all teams.
+![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)
+![Pydantic](https://img.shields.io/badge/Pydantic-v2-E92063.svg)
+![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.4-F7931E.svg)
 
+An intelligent, data-driven football scouting and recruitment platform that identifies similar attacking profiles in the Barclays Women's Super League (WSL). 
 
-## Features & Architecture
-
-The system is split into three main modules designed to handle everything from raw data to recommendation:
-
-
-```
-
-[ StatsBomb API / Cache ]  
-[ Data Filtering Pipeline ]  
-[ Cosine Recommender Engine ]
-
-
-```
-
-1. **Robust Data Ingestion (`data_loader.py`)**
-   * Connects to the free StatsBomb API to fetch event streams for the entire WSL 2023/2024 season
-   * Implements automated local caching via `.parquet` files using `pathlib` to avoid redundant network requests and maximize speed
-
-2. **Tactical Profiling Pipeline (`filter_data`)**
-   * **Dynamic Position Filter:** Scans the event records to extract unique player IDs assigned to authentic attacking roles (`Center Forward`, `Left/Right Wing`, `Secondary Striker` etc). This screens out center backs or defensive midfielders
-   * **Organises data:** Organises thousands of match events into a single spreadsheet style matrix containing seasonal **Goals**, **Expected Goals (xG)**, **Shots**, and **Assists**.
-   * **Sample Size Guard:** Filters out noise by dropping any player with fewer than **15 shots** across the season, eliminating low-minute substitutes and fluke statistical conversion rates.
-
-3. **Mathematical Matcher (`get_similar_players`)**
-   * **Min-Max Normalization:** Standardizes features to a strict `0.0 to 1.0` range using `scikit-learn`'s `MinMaxScaler`. This ensures high volume categories like *Shots* do not drown out low volume, high value metrics like *Expected Goals*.
-   * **Cosine Similarity:** Uses angular vector metrics instead of straight line Euclidean distance. This evaluates the **shape and balance of a player's style** (e.g. goal-to-assist ratios) so top performers in struggling teams can still match perfectly with superstars in dominant teams.
+By leveraging raw event-level data from the **StatsBomb API** (2023/2024 season), the system isolates forward positions, aggregates season-long performance metrics, and uses **Cosine Similarity** to match player profiles based on tactical style rather than sheer team-volume output.
 
 ---
 
-## Project Structure
+## 🚀 Project Evolution: From Local ML Script to Cloud Microservice
 
+This project began as a standalone Python data analytics script using Pandas and Scikit-learn. To make the model accessible as a real-time scouting tool, it was re-architected into a modular, containerised REST API service:
 
-- ### data_loader.py          
-   Fetches match events and manages local Parquet cache
-- ### main.py          
-   Filters positions, aggregates stats, and calculates similarities
-- ### WSL_2023-2024.parquet   
-   Local data cache created automatically on first run
-- ### final.ipynb / predictor.py  
-   Execution script or notebook to run scouting reports
+* **Phase 1 (Data & ML Engine)**: ETL pipeline ingesting StatsBomb event data, Parquet local caching, Min-Max normalisation, and Cosine Similarity matching with a 15-shot Sample Size Guard.
+* **Phase 2 (FastAPI Backend)**: Wrapped the recommender into an asynchronous REST API with strict Pydantic schemas, dynamic Enum dropdowns, and automatic Swagger UI docs.
+* **Phase 3 (Containerisation)**: Packaged the full application and dependencies into a lightweight, secure Docker container running a non-root user.
 
+---
 
-
-
-
-##  Installation & Requirements
-
-Ensure you have Python installed alongside the required data science and sports analytics libraries:
-
-```bash
-pip install pandas numpy scikit-learn statsbombpy pyarrow
+## 🏗️ System Architecture
 
 ```
-
-
-
-
-
-## Example Execution Output
-
-```python
-# How to call your pipeline
-raw_data = get_wsl_data()
-scouting_matrix = filter_data(raw_data)
-
-# Generate an algorithmic scouting report
-recommend_striker_profile(scouting_matrix, "Lauren James")
+[ StatsBomb API ]
+       │ (Initial fetch)
+       ▼
+[ data/WSL_2023-2024.parquet ] ──► [ src/data_loader.py ]
+                                           │
+                                           ▼ (Loaded into memory at boot)
+                                  [ src/recommender.py ]
+                                    • Attacking Position Filter
+                                    • Sample Size Guard (>= 15 Shots)
+                                    • Min-Max Normalisation
+                                           │
+                                           ▼
+                                    [ src/main.py ]
+                                    • FastAPI Routes (/status, /strikers, /recommend)
+                                    • Pydantic Request & Response Validation
+                                    • Dynamic Enum Dropdowns
+                                           │
+                                           ▼
+                                  [ Docker Container / Swagger UI ]
 ```
 
-**Expected Console Output Layout:**
+### 1. Robust Data Ingestion (`src/data_loader.py`)
+* Connects to the free StatsBomb API to fetch match events for the complete WSL 2023/2024 season.
+* Implements automated local caching via compressed `.parquet` files using `pathlib.Path.resolve()` to avoid redundant API network requests and maximise startup speed.
+
+### 2. Tactical Profiling Pipeline (`src/recommender.py`)
+* **Dynamic Position Filter**: Extracts players assigned to authentic forward roles (`Center Forward`, `Left/Right Wing`, `Secondary Striker`, etc.), screening out defenders and midfielders.
+* **Metric Aggregation**: Aggregates event streams into seasonal **Goals**, **Expected Goals (xG)**, **Shots**, and **Assists**.
+* **Sample Size Guard**: Filters out statistical noise by dropping any player with fewer than **15 shots** across the season, eliminating low-minute substitutes and fluke conversion rates.
+
+### 3. Mathematical Matcher (`src/recommender.py`)
+* **Min-Max Normalisation**: Standardises features to a strict `0.0 to 1.0` range using `MinMaxScaler`. This ensures high-volume metrics like *Shots* do not drown out low-volume, high-value metrics like *xG* or *Assists*.
+* **Cosine Similarity**: Evaluates the angular vector balance of a player's style (e.g. shot-to-goal conversion, goal-to-assist balance) so top performers in struggling teams match with superstars in dominant teams.
+
+### 4. REST API & Validation Layer (`src/main.py`)
+* **FastAPI Service**: Serves endpoints with sub-millisecond in-memory query lookups.
+* **Pydantic Schemas (`SimilarToPlayer`, `ScoutingReport`)**: Strict data contracts validating input parameters and sanitising outgoing JSON dossiers.
+* **Dynamic Enums**: Generates string Enums from the dataset index to render interactive dropdown selectors in the Swagger UI (`/docs`).
+
+---
+
+## 📂 Repository Structure
 
 ```text
-==========================================
- SCOUTING REPORT: LAUREN JAMES
-==========================================
-CURRENT PROFILE:
-    Goals:   13
-    xG:      9.20
-    Shots:   45
-    Assists: 5
-------------------------------------------
---- Recommendation for Lauren James ---
-
-1. Player X (94.2% Match)
-    Goals:   11
-    xG:      8.45
-    Shots:   42
-    Assists: 4
-
-2. Player Y (89.7% Match)
-    Goals:   14
-    xG:      9.10
-    Shots:   48
-    Assists: 2
-
-==========================================
-
+Football-Player-Recommendation-System/
+│
+├── data/
+│   └── WSL_2023-2024.parquet          # Compressed StatsBomb event data cache
+│
+├── src/
+│   ├── __init__.py                    # Declares src as a regular Python package
+│   ├── data_loader.py                 # Data ingestion & Parquet cache loader
+│   ├── recommender.py                 # Core ML engine: filtering & Cosine Similarity
+│   └── main.py                        # FastAPI web application & Pydantic schemas
+│
+├── Dockerfile                         # Production container recipe (Python 3.13-slim)
+├── .dockerignore                      # Build exclusions (caches, git metadata, env)
+├── requirements.txt                   # Pinned Python dependencies
+├── .gitignore                         # Git tracking exclusions
+├── ARCHITECTURE_AND_INTERVIEW_GUIDE.md # Comprehensive system design & interview guide
+└── readme.md                          # Project documentation
 ```
 
 ---
 
-## Design choice: Cosine vs Euclidean?
+## 🌐 API Endpoints
 
-- **Euclidean Distance** measures the literal physical distance between data points. This creates a flaw where a world-class forward playing for a weaker team with fewer chances would never be recommended as a replacement for a striker playing in a dominant team due to the big difference in stats.
-- **Cosine Similarity** measures the *angle of direction* from the origin. It tracks the mathematical balance and shape of the statistics. If two players possess an identical goal-to-assist or shot-to-goal ratio, Cosine Similarity identifies them as matches regardless of team strength.
+| Method | Endpoint | Description | Response Model |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/status` | Health check probe for uptime monitoring. | `{"status": "...", "code": 200}` |
+| `GET` | `/strikers` | Returns list of all eligible strikers in dataset. | `{"strikers": [...]}` |
+| `POST` | `/recommend` | Generates a full scouting dossier with target stats & top matches. | `ScoutingReport` |
+
+---
+
+## 💻 Quickstart: How to Run
+
+### Method A: Running Locally with Python & Uvicorn
+
+1. **Clone the repository and install dependencies**:
+   ```bash
+   git clone https://github.com/mabdurrehman2006/Football-Player-Recommendation-System.git
+   cd Football-Player-Recommendation-System
+   pip install -r requirements.txt
+   ```
+
+2. **Start the FastAPI development server**:
+   ```bash
+   uvicorn src.main:app --reload
+   ```
+
+3. **Open the interactive Swagger UI documentation**:
+   Visit [http://localhost:8000/docs](http://localhost:8000/docs) in your browser.
+
+---
+
+### Method B: Running with Docker (Recommended)
+
+1. **Build the Docker container image**:
+   ```bash
+   docker build -t wsl-scouting-app .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -p 8080:8080 wsl-scouting-app
+   ```
+
+3. **Access the live service**:
+   Visit [http://localhost:8080/docs](http://localhost:8080/docs) in your browser.
+
+---
+
+## 📊 Example Scouting Dossier Output
+
+When querying recommendations for a striker (e.g. `Lauren James`, `numberofrecs = 2`), the API returns a structured `ScoutingReport` JSON response:
+
+```json
+{
+  "target_player_stats": {
+    "Player": "Lauren James",
+    "Similarity": 100.0,
+    "Goals": 13,
+    "Expected_Goals": 9.20,
+    "Shots": 45,
+    "Assists": 5
+  },
+  "recommendations": [
+    {
+      "Player": "Alessia Russo",
+      "Similarity": 94.20,
+      "Goals": 12,
+      "Expected_Goals": 10.15,
+      "Shots": 48,
+      "Assists": 4
+    },
+    {
+      "Player": "Lauren Hemp",
+      "Similarity": 89.70,
+      "Goals": 9,
+      "Expected_Goals": 7.80,
+      "Shots": 38,
+      "Assists": 6
+    }
+  ]
+}
+```
+
+---
+
+## 🧠 Design Choice: Cosine Similarity vs Euclidean Distance
+
+* **Euclidean Distance** measures the physical straight-line distance between data points. This creates a severe flaw where a world-class striker playing for a struggling club with fewer chances would never match with a forward playing for a dominant team due to the sheer volume gap.
+* **Cosine Similarity** measures the angle of direction from the origin. It evaluates the mathematical balance and style ratios of the player (e.g. shot-to-goal conversion, assist-to-goal balance, xG efficiency). By dividing by the vector lengths, total team volume is cancelled out, allowing scouts to find authentic tactical matches regardless of team dominance.
+
