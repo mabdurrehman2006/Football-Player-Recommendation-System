@@ -1,7 +1,7 @@
 
 
 
-# WSL Striker Intelligence Platform
+# WSL Striker Recommender Engine
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688.svg)
@@ -15,7 +15,7 @@ By leveraging raw event-level data from the **StatsBomb API** (2023/2024 season)
 
 ---
 
-## 🚀 Project Evolution: From Local ML Script to Cloud Microservice
+##  Project Evolution: From Local ML Script to Cloud Microservice
 
 This project began as a standalone Python data analytics script using Pandas and Scikit-learn. To make the model accessible as a real-time scouting tool, it was re-architected into a modular, containerised REST API service:
 
@@ -25,7 +25,7 @@ This project began as a standalone Python data analytics script using Pandas and
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```
 [ StatsBomb API ]
@@ -69,7 +69,7 @@ This project began as a standalone Python data analytics script using Pandas and
 
 ---
 
-## 📂 Repository Structure
+##  Repository Structure
 
 ```text
 Football-Player-Recommendation-System/
@@ -92,7 +92,7 @@ Football-Player-Recommendation-System/
 
 ---
 
-## 🌐 API Endpoints
+##  API Endpoints
 
 | Method | Endpoint | Description | Response Model |
 | :--- | :--- | :--- | :--- |
@@ -102,7 +102,7 @@ Football-Player-Recommendation-System/
 
 ---
 
-## 💻 Quickstart: How to Run
+##  Quickstart: How to Run
 
 ### Method A: Running Locally with Python & Uvicorn
 
@@ -140,7 +140,7 @@ Football-Player-Recommendation-System/
 
 ---
 
-## 📊 Example Scouting Dossier Output
+##  Example Scouting Dossier Output
 
 When querying recommendations for a striker (e.g. `Lauren James`, `numberofrecs = 2`), the API returns a structured `ScoutingReport` JSON response:
 
@@ -177,7 +177,7 @@ When querying recommendations for a striker (e.g. `Lauren James`, `numberofrecs 
 
 ---
 
-## 🧠 Design Choice: Cosine Similarity vs Euclidean Distance
+##  Design Choice: Cosine Similarity vs Euclidean Distance
 
 * **Euclidean Distance** measures the physical straight-line distance between data points. This creates a severe flaw where a world-class striker playing for a struggling club with fewer chances would never match with a forward playing for a dominant team due to the sheer volume gap.
 * **Cosine Similarity** measures the angle of direction from the origin. It evaluates the mathematical balance and style ratios of the player (e.g. shot-to-goal conversion, assist-to-goal balance, xG efficiency). By dividing by the vector lengths, total team volume is cancelled out, allowing scouts to find authentic tactical matches regardless of team dominance.
